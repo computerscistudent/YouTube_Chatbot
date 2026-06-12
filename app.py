@@ -32,7 +32,7 @@ def extract_video_id(url_or_id : str):
 
 if st.session_state.page == "setup":
     st.title("🎥 YouTube RAG Chatbot Engine")
-    st.write("Paste a YouTube video link below to ingest its transcript into a local vector storage matrix and start chatting with the video context!")
+    st.write("Paste a YouTube video link below to ingest its transcript into a local vector storage matrix and start chatting!")
     st.markdown("----")
 
     user_input = st.text_input("Enter YouTube Video URL or Video ID:", placeholder="e.g., https://www.youtube.com/watch?v=c64hqovEG-U")
@@ -44,20 +44,21 @@ if st.session_state.page == "setup":
                 try:
                     video_id = extract_video_id(user_input)
                     st.session_state.video_id = video_id
-                    status.update(label="🔍 Checking local storage for pre-built vector cache...")
+                    
+                    # Step 1: Check for pre-existing cloud storage cache
+                    status.update(label="🔍 Checking cloud storage for pre-built vector cache...")
                     vector_store = VectorStoreRetriever.load_local_vectors(video_id=video_id)
+                    
                     if vector_store:
-                        status.update(label="⚡ Cache found! Loading vectors instantly...")
+                        status.update(label="⚡ Cache found! Loading FAISS vectors instantly...")
                     else:
-                        status.update(label="🔄 Step 1: Cache Missing. Fetching YouTube Transcript from API...")
+                        # Step 2: Request proxy-wrapped extraction via Scrapingdog API
+                        status.update(label="🔄 Step 1: Cache missing. Route extraction via proxy bypass engine...")
                         caption = Transcript.get_transcript(video_id=video_id)
+                        
                         if not caption:
-                            st.warning("⚠️ YouTube API rate-limited your IP. Falling back to locally cached transcript file...")
-                            if os.path.exists("mock_transcript.txt"):
-                                with open("mock_transcript.txt", "r", encoding="utf-8") as f:
-                                    caption = f.read()
-                            else:
-                                raise Exception("Transcript Fetch Failed completely")
+                            raise Exception("Bypass extraction endpoint returned empty data. Check API key credentials.")
+                                
                         status.update(label="🧠 Step 2: Fragmenting Text Chunks...")
                         chunks = TextChunks.create_chunks(caption)
 
@@ -70,11 +71,9 @@ if st.session_state.page == "setup":
                     retriever = VectorStoreRetriever.build_retriever(vector_store=vector_store)
                     st.session_state.retriever = retriever
 
-                    status.update(label="✅ Success! Pipeline Compiled.", state="complete")
-
+                    status.update(label="✅ Success! Engine Initialized.", state="complete")
                     st.session_state.page = "chat"
                     st.rerun()
-
 
                 except Exception as e:
                     status.update(label="❌ Pipeline Failed", state="error")
