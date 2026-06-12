@@ -13,12 +13,12 @@ class Transcript:
                 print("Missing SCRAPER_API_KEY secret token configurations.")
                 return None
                 
-            # 🟢 FIX: Remove the trailing forward slash from the end of the endpoint URL string!
             url = "https://api.scrapingdog.com/youtube/transcripts"
             
+            # 🟢 THE FIX: Change the query parameter from "v" to "video_id"
             params = {
                 "api_key": api_key,
-                "v": video_id
+                "video_id": video_id
             }
             
             # Fire proxy-wrapped GET request
@@ -27,7 +27,7 @@ class Transcript:
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check if payload returned empty or invalid
+                # Double check if payload returned completely blank
                 if not data:
                     print("API response payload is completely empty.")
                     return None
