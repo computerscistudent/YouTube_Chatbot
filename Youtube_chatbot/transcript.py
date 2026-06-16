@@ -22,7 +22,7 @@ class Transcript:
 
             params = {
                 "api_key": api_key,
-                "video_id": video_id
+                "v": video_id
             }
 
             response = requests.get(
